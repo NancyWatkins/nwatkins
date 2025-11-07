@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administering a Running Record and Determining Reading Levels</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2em;
+        }
+        
+        .header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content-box {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        
+        h3 {
+            color: #764ba2;
+            margin-top: 20px;
+        }
+        
+        .accordion {
+            background-color: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .accordion-header {
+            background-color: #667eea;
+            color: white;
+            padding: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+        
+        .accordion-header:hover {
+            background-color: #5568d3;
+        }
+        
+        .accordion-icon {
+            transition: transform 0.3s;
+            font-size: 1.2em;
+        }
+        
+        .accordion-icon.active {
+            transform: rotate(180deg);
+        }
+        
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            padding: 0 15px;
+        }
+        
+        .accordion-content.active {
+            padding: 15px;
+        }
+        
+        .symbol-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .symbol-box strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .formula-box {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        .formula-box strong {
+            color: #1976d2;
+            font-size: 1.2em;
+        }
+        
+        .level-card {
+            background: white;
+            border-left: 5px solid #4caf50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .level-card.instructional {
+            border-left-color: #ff9800;
+        }
+        
+        .level-card.frustration {
+            border-left-color: #f44336;
+        }
+        
+        .level-card h4 {
+            margin-top: 0;
+            color: #4caf50;
+        }
+        
+        .level-card.instructional h4 {
+            color: #ff9800;
+        }
+        
+        .level-card.frustration h4 {
+            color: #f44336;
+        }
+        
+        .quiz-box {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        
+        .quiz-question {
+            font-weight: bold;
+            color: #e65100;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .quiz-option {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            padding: 12px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .quiz-option:hover {
+            border-color: #ff9800;
+            background: #fff8f0;
+        }
+        
+        .quiz-option input[type="radio"] {
+            margin-right: 10px;
+        }
+        
+        .check-answer-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+        
+        .check-answer-btn:hover {
+            background: #f57c00;
+        }
+        
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            font-weight: bold;
+        }
+        
+        .feedback.correct {
+            background: #c8e6c9;
+            color: #2e7d32;
+            border: 2px solid #4caf50;
+        }
+        
+        .feedback.incorrect {
+            background: #ffcdd2;
+            color: #c62828;
+            border: 2px solid #f44336;
+        }
+        
+        .tip-box {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .tip-box::before {
+            content: "💡 TIP: ";
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        
+        .interactive-example {
+            background: #f3e5f5;
+            border: 2px solid #9c27b0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .interactive-example h4 {
+            color: #6a1b9a;
+            margin-top: 0;
+        }
+        
+        .calculation-input {
+            width: 80px;
+            padding: 8px;
+            border: 2px solid #9c27b0;
+            border-radius: 4px;
+            font-size: 1em;
+            margin: 0 5px;
+        }
+        
+        .calculate-btn {
+            background: #9c27b0;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-left: 10px;
+            transition: background 0.3s;
+        }
+        
+        .calculate-btn:hover {
+            background: #7b1fa2;
+        }
+        
+        .result-display {
+            background: white;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            border: 2px solid #9c27b0;
+            font-weight: bold;
+            color: #6a1b9a;
+            display: none;
+        }
+        
+        ul, ol {
+            padding-left: 25px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .workflow-diagram {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .step-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            width: 200px;
+            text-align: center;
+        }
+        
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .step {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📚 Administering a Running Record and Determining Reading Levels</h1>
+    <p>A comprehensive guide to assessing student reading abilities</p>
+</div>
+
+<div class="content-box">
+    <h2>What is a Running Record?</h2>
+    <p>A running record is an observational assessment tool used by educators to document a student's oral reading. It provides a detailed account of a student's reading behaviors, including miscues (errors), self-corrections, and fluency. Unlike standardized tests, a running record offers a real-time snapshot of a student's reading process, allowing teachers to identify specific areas of strength and weakness.</p>
+    
+    <div class="tip-box">
+        Running records are most effective when administered regularly to track progress over time and inform instructional decisions.
+    </div>
+</div>
+
+<div class="content-box">
+    <h2>Preparing for a Running Record</h2>
+    
+    <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>1. Select an Appropriate Text</span>
+            <span class="accordion-icon">▼</span>
+        </div>
+        <div class="accordion-content">
+            <p>Choose a text that is:</p>
+            <ul>
+                <li><strong>Unfamiliar</strong> to the student</li>
+                <li>At their <strong>estimated reading level</strong></li>
+                <li><strong>100-200 words</strong> for younger readers, longer for older readers</li>
+                <li>A <strong>complete passage</strong>, rather than an excerpt</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>2. Gather Your Materials</span>
+            <span class="accordion-icon">▼</span>
+        </div>
+        <div class="accordion-content">
+            <p>You will need:</p>
+            <ul>
+                <li>The selected text</li>
+                <li>A running record form or blank sheet of paper</li>
+                <li>A pen or pencil</li>
+                <li>A timer (optional, for measuring reading rate)</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>3. Explain the Process to the Student</span>
+            <span class="accordion-icon">▼</span>
+        </div>
+        <div class="accordion-content">
+            <p>Briefly explain to the student that you will be listening to them read and marking down what they say. Reassure them that this is <strong>not a test</strong>, but a way to help them become a better reader.</p>
+        </div>
+    </div>
+</div>
+
+<div class="content-box">
+    <h2>Running Record Symbols</h2>
+    <p>During the running record, you'll use standardized symbols to record the student's reading behaviors:</p>
+    
+    <div class="symbol-box">
+        <strong>✓ (Checkmark)</strong>
+        The student reads the word correctly.
+    </div>
+    
+    <div class="symbol-box">
+        <strong>M (Miscue)</strong>
+        The student makes an error. Write the word the student said above the actual word in the text. <em>(Counts as error)</em>
+    </div>
+    
+    <div class="symbol-box">
+        <strong>^ (Insertion)</strong>
+        The student adds a word that is not in the text. Write the inserted word above the line. <em>(Counts as error)</em>
+    </div>
+    
+    <div class="symbol-box">
+        <strong>∅ (Omission)</strong>
+        The student skips a word. <em>(Counts as error)</em>
+    </div>
+    
+    <div class="symbol-box">
+        <strong>T (Told)</strong>
+        The student struggles with a word, and you provide it for them. <em>(Counts as error)</em>
+    </div>
+    
+    <div class="symbol-box" style="border-left-color: #4caf50;">
+        <strong>SC (Self-Correction)</strong>
+        The student initially makes an error but corrects it independently. <em>(Does NOT count as error)</em>
+    </div>
+    
+    <div class="symbol-box" style="border-left-color: #4caf50;">
+        <strong>R (Repetition)</strong>
+        The student repeats a word or phrase. <em>(Does NOT count as error)</em>
+    </div>
+</div>
+
+<div class="content-box">
+    <h2>Administration Procedure</h2>
+    
+    <div class="workflow-diagram">
+        <h3>The Running Record Cycle</h3>
+        <div class="step-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <strong>Observe</strong>
+                <p>Watch and note student's reading actions</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <strong>Record</strong>
+                <p>Use standardized symbols to document</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <strong>Analyze</strong>
+                <p>Identify error patterns</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <strong>Assess</strong>
+                <p>Check comprehension and fluency</p>
+            </div>
+            <div class="step">
+                <div class="step-number">5</div>
+                <strong>Determine</strong>
+                <p>Calculate reading level</p>
+            </div>
+        </div>
+    </div>
+    
+    <h3>Key Steps:</h3>
+    <ol>
+        <li><strong>Have the student read aloud.</strong> Mark miscues and behaviors using the symbols. Set a timer for one minute and mark where they read to calculate words correct per minute (wcpm).</li>
+        <li><strong>Avoid interrupting.</strong> Allow students to decode independently. Only provide assistance if truly stuck.</li>
+        <li><strong>Note reading behaviors.</strong> Observe fluency, phrasing, and expression.</li>
+        <li><strong>Use two copies.</strong> Mark the teacher copy with all observations.</li>
+    </ol>
+</div>
+
+<div class="content-box">
+    <h2>Calculating Accuracy Rate</h2>
+    
+    <div class="formula-box">
+        <strong>Formula:</strong><br>
+        Accuracy Rate = (Total Words Read - Total Errors) ÷ Total Words Read × 100
+    </div>
+    
+    <div class="interactive-example">
+        <h4>🧮 Try It Yourself: Accuracy Calculator</h4>
+        <p>Enter the values below to calculate the accuracy rate:</p>
+        
+        <div style="margin: 20px 0;">
+            <label>Total Words Read: 
+                <input type="number" id="totalWords" class="calculation-input" placeholder="150">
+            </label>
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <label>Total Errors: 
+                <input type="number" id="totalErrors" class="calculation-input" placeholder="5">
+            </label>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculateAccuracy()">Calculate Accuracy</button>
+        
+        <div id="accuracyResult" class="result-display"></div>
+    </div>
+</div>
+
+<div class="content-box">
+    <h2>Determining Reading Levels</h2>
+    <p>Use the accuracy rate and comprehension observations to determine the student's reading level:</p>
+    
+    <div class="level-card">
+        <h4>🟢 Independent Level</h4>
+        <p><strong>Accuracy Rate:</strong> 95-100%</p>
+        <p><strong>Comprehension:</strong> Excellent - answers questions accurately and demonstrates strong understanding</p>
+        <p><strong>What it means:</strong> The student can read the text fluently and accurately with excellent comprehension.</p>
+    </div>
+    
+    <div class="level-card instructional">
+        <h4>🟡 Instructional Level</h4>
+        <p><strong>Accuracy Rate:</strong> 90-94%</p>
+        <p><strong>Comprehension:</strong> Good - answers most questions accurately with some prompting</p>
+        <p><strong>What it means:</strong> The student can read with support and guidance. This is the ideal level for instruction.</p>
+    </div>
+    
+    <div class="level-card frustration">
+        <h4>🔴 Frustration Level</h4>
+        <p><strong>Accuracy Rate:</strong> Below 90%</p>
+        <p><strong>Comprehension:</strong> Poor - struggles to answer questions and demonstrates limited understanding</p>
+        <p><strong>What it means:</strong> The text is too difficult. The student struggles with decoding and comprehension.</p>
+    </div>
+</div>
+
+<div class="content-box">
+    <h2>Assessing Comprehension</h2>
+    <p>Comprehension is just as important as accuracy. After the student reads, assess understanding through:</p>
+    
+    <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>Retelling</span>
+            <span class="accordion-icon">▼</span>
+        </div>
+        <div class="accordion-content">
+            <p>Ask the student to retell the story in their own words. This assesses their ability to recall key events and details.</p>
+        </div>
+    </div>
+    
+    <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>Comprehension Questions</span>
+            <span class="accordion-icon">▼</span>
+        </div>
+        <div class="accordion-content">
+            <p>Ask specific questions about the text, including:</p>
+            <ul>
+                <li><strong>Literal:</strong> Explicitly stated in the text</li>
+                <li><strong>Inferential:</strong> Requiring the reader to draw conclusions</li>
+                <li><strong>Evaluative:</strong> Requiring the reader to form opinions</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>Discussion</span>
+            <span class="accordion-icon">▼</span>
+        </div>
+        <div class="accordion-content">
+            <p>Engage the student in a discussion about the text. This allows you to assess their understanding of themes, characters, and the overall message.</p>
+        </div>
+    </div>
+</div>
+
+<div class="quiz-box">
+    <h3>✅ Knowledge Check</h3>
+    <div class="quiz-question">
+        A student reads 120 words and makes 8 errors. What is their reading level?
+    </div>
+    
+    <div class="quiz-option">
+        <label>
+            <input type="radio" name="q1" value="independent">
+            Independent Level (95-100% accuracy)
+        </label>
+    </div>
+    
+    <div class="quiz-option">
+        <label>
+            <input type="radio" name="q1" value="instructional">
+            Instructional Level (90-94% accuracy)
+        </label>
+    </div>
+    
+    <div class="quiz-option">
+        <label>
+            <input type="radio" name="q1" value="frustration">
+            Frustration Level (below 90% accuracy)
+        </label>
+    </div>
+    
+    <button class="check-answer-btn" onclick="checkQuizAnswer()">Check Answer</button>
+    
+    <div id="quizFeedback" class="feedback"></div>
+</div>
+
+<div class="content-box">
+    <h2>Using the Information</h2>
+    <p>The information gathered from a running record can be used to:</p>
+    
+    <ul>
+        <li><strong>Select appropriate reading materials:</strong> Choose books at the student's instructional level for guided reading and independent practice.</li>
+        <li><strong>Plan targeted instruction:</strong> Focus on specific areas of weakness identified through miscue analysis.</li>
+        <li><strong>Monitor progress:</strong> Administer running records regularly to track the student's growth over time.</li>
+        <li><strong>Communicate with parents:</strong> Share the results with parents to provide them with a clear understanding of their child's reading abilities.</li>
+    </ul>
+</div>
+
+<div class="content-box">
+    <h2>Conclusion</h2>
+    <p>Administering a running record is a powerful tool for assessing a student's reading abilities and informing instruction. By carefully observing and recording a student's reading behaviors, calculating the accuracy rate, and assessing comprehension, educators can gain valuable insights into their strengths and weaknesses. This information can then be used to select appropriate reading materials, plan targeted instruction, and monitor progress, ultimately helping students become more confident and proficient readers.</p>
+</div>
+
+<script>
+function toggleAccordion(header) {
+    const content = header.nextElementSibling;
+    const icon = header.querySelector('.accordion-icon');
+    
+    // Close all other accordions
+    document.querySelectorAll('.accordion-content').forEach(item => {
+        if (item !== content && item.classList.contains('active')) {
+            item.classList.remove('active');
+            item.style.maxHeight = null;
+            item.previousElementSibling.querySelector('.accordion-icon').classList.remove('active');
+        }
+    });
+    
+    // Toggle current accordion
+    if (content.classList.contains('active')) {
+        content.classList.remove('active');
+        content.style.maxHeight = null;
+        icon.classList.remove('active');
+    } else {
+        content.classList.add('active');
+        content.style.maxHeight = content.scrollHeight + "px";
+        icon.classList.add('active');
+    }
+}
+
+function calculateAccuracy() {
+    const totalWords = parseFloat(document.getElementById('totalWords').value);
+    const totalErrors = parseFloat(document.getElementById('totalErrors').value);
+    const resultDiv = document.getElementById('accuracyResult');
+    
+    if (isNaN(totalWords) || isNaN(totalErrors) || totalWords <= 0) {
+        resultDiv.innerHTML = "Please enter valid numbers for both fields.";
+        resultDiv.style.display = 'block';
+        return;
+    }
+    
+    if (totalErrors > totalWords) {
+        resultDiv.innerHTML = "Total errors cannot exceed total words read.";
+        resultDiv.style.display = 'block';
+        return;
+    }
+    
+    const accuracy = ((totalWords - totalErrors) / totalWords * 100).toFixed(2);
+    
+    let level = '';
+    let levelColor = '';
+    
+    if (accuracy >= 95) {
+        level = 'Independent Level';
+        levelColor = '#4caf50';
+    } else if (accuracy >= 90) {
+        level = 'Instructional Level';
+        levelColor = '#ff9800';
+    } else {
+        level = 'Frustration Level';
+        levelColor = '#f44336';
+    }
+    
+    resultDiv.innerHTML = `
+        <div style="font-size: 1.2em;">Accuracy Rate: ${accuracy}%</div>
+        <div style="color: ${levelColor}; font-size: 1.3em; margin-top: 10px;">${level}</div>
+    `;
+    resultDiv.style.display = 'block';
+}
+
+function checkQuizAnswer() {
+    const selected = document.querySelector('input[name="q1"]:checked');
+    const feedback = document.getElementById('quizFeedback');
+    
+    if (!selected) {
+        feedback.innerHTML = "Please select an answer.";
+        feedback.className = 'feedback incorrect';
+        feedback.style.display = 'block';
+        return;
+    }
+    
+    // Calculate: (120 - 8) / 120 * 100 = 93.33%
+    const correctAnswer = 'instructional';
+    
+    if (selected.value === correctAnswer) {
+        feedback.innerHTML = "✓ Correct! With 93.33% accuracy, this student is at the Instructional Level (90-94%). This is the ideal level for teaching!";
+        feedback.className = 'feedback correct';
+    } else {
+        feedback.innerHTML = "✗ Not quite. Let's calculate: (120 - 8) ÷ 120 × 100 = 93.33%. This falls in the Instructional Level range (90-94%).";
+        feedback.className = 'feedback incorrect';
+    }
+    
+    feedback.style.display = 'block';
+}
+</script>
+
+</body>
+</html>
